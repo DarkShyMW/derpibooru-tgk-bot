@@ -9,11 +9,12 @@ from contextlib import suppress
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Callable, Dict, List, Optional, Set
 
 import aiohttp
 from aiohttp import web
 from telegram import Bot
+
 
 DERPI_SEARCH_URL = "https://derpibooru.org/api/v1/json/search/images"
 SETTINGS_FILE = Path("settings.json")
@@ -23,12 +24,23 @@ DEFAULT_INTERVAL_MINUTES = 60
 DEFAULT_FILTER_ID = 56027
 MAX_IMAGES_EXPOSE = 200
 
-TELEGRAM_TOKEN = os.getenv(
-    "TELEGRAM_TOKEN",
-    "7711849755:AAGpXO59jvHHWEWPfF6oA7iYrz9H_rTK2q0",
-)
-CHANNEL_ID = int(os.getenv("CHANNEL_ID", "-1002010407572"))
-DERPIBOORU_TOKEN = os.getenv("DERPIBOORU_TOKEN", "hY4hYzlpzOLegQl_W2Mx")
+def require_env(name: str, cast: Optional[Callable[[str], Any]] = None) -> Any:
+    value = os.getenv(name)
+    if value is None or value == "":
+        raise RuntimeError(
+            f"Environment variable {name} is required. Please set it before running the app."
+        )
+    if cast:
+        try:
+            return cast(value)
+        except Exception as exc:  # pragma: no cover - validation guardrail
+            raise RuntimeError(f"Cannot cast {name}: {exc}") from exc
+    return value
+
+
+TELEGRAM_TOKEN = require_env("TELEGRAM_TOKEN")
+CHANNEL_ID = require_env("CHANNEL_ID", cast=int)
+DERPIBOORU_TOKEN = require_env("DERPIBOORU_TOKEN")
 WEB_HOST = os.getenv("WEB_HOST", "0.0.0.0")
 WEB_PORT = int(os.getenv("WEB_PORT", "8080"))
 
