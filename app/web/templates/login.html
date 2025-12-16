@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Login — Derpi Bot</title>
+  <link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+  <main class="container center">
+    <section class="card auth">
+      <div class="title">Вход в настройки</div>
+      <div class="subtitle">Используй admin или viewer из .env</div>
+
+      <form action="/auth/login" method="post" class="form">
+        <label>Логин</label>
+        <input name="user" autocomplete="username" required />
+
+        <label>Пароль</label>
+        <input name="password" type="password" autocomplete="current-password" required />
+
+        <button class="btn" type="submit">Войти</button>
+        <a class="btn ghost" href="/">Назад</a>
+      </form>
+
+      <div class="hint" id="hint"></div>
+    </section>
+  </main>
+
+  <script src="/static/login.js"></script>
+</body>
+</html>

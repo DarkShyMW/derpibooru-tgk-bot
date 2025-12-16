@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Derpi Bot — Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <div class="logo">☕</div>
+      <div>
+        <div class="title">Derpibooru Bot</div>
+        <div class="subtitle">Публичная галерея (live)</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a class="btn ghost" href="/settings">Настройки</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="panel">
+      <div class="row">
+        <div class="chip" id="status-chip">Подключаемся…</div>
+        <div class="chip" id="count-chip">0</div>
+      </div>
+      <div id="toast" class="toast hidden"></div>
+    </section>
+
+    <section class="grid" id="grid"></section>
+    <div class="empty" id="empty" style="display:none;">Пока нет отправленных картинок</div>
+  </main>
+
+  <script src="/static/index.js"></script>
+</body>
+</html>

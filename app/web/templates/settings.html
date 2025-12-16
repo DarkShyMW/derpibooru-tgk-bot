@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Derpi Bot — Settings</title>
+  <link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <div class="logo">⚙️</div>
+      <div>
+        <div class="title">Настройки</div>
+        <div class="subtitle">Доступ только после входа</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a class="btn ghost" href="/">Галерея</a>
+      <form action="/auth/logout" method="post">
+        <button class="btn ghost" type="submit">Выйти</button>
+      </form>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <div class="row">
+        <div class="chip" id="next-run-chip">Следующий пост: —</div>
+        <button class="btn" id="post-now">Отправить сейчас</button>
+      </div>
+
+      <div class="form">
+        <label>Интервал (минуты)</label>
+        <input id="interval" type="number" min="1"/>
+
+        <label>Filter ID</label>
+        <input id="filterId" type="number" placeholder="56027"/>
+
+        <label>Группы тегов (каждая строка — группа)</label>
+        <textarea id="tags" placeholder="pony, solo&#10;safe, smiling"></textarea>
+
+        <div class="row">
+          <button class="btn" id="save">Сохранить</button>
+          <button class="btn ghost" id="reload">Перезагрузить</button>
+        </div>
+
+        <div id="toast" class="toast hidden"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/settings.js"></script>
+</body>
+</html>
