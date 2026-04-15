@@ -1,3 +1,4 @@
+[![Python Tests](https://github.com/DarkShyMW/derpibooru-tgk-bot/actions/workflows/python-tests.yml/badge.svg)](https://github.com/DarkShyMW/derpibooru-tgk-bot/actions/workflows/python-tests.yml)
 # Derpibooru Telegram Bot + Web Dashboard (WS + RBAC)
 
 Асинхронный бот-постер картинок из Derpibooru в Telegram-канал + веб-панель:
