@@ -2,6 +2,7 @@ from __future__ import annotations
 from aiohttp import web
 from pathlib import Path
 from app.web.auth import session_middleware, require_login_middleware, require_role_middleware, make_session_cookie
+from app.web.ws import ws_origin_check_middleware
 from app.web.routes import setup_routes
 
 
@@ -11,6 +12,8 @@ def create_web_app(*, cfg, settings_store, sent_store, autoposter, ws_hub) -> we
 
     app = web.Application(middlewares=[
         session_middleware(secret=cfg.session_secret),
+        # WebSocket origin check for CSRF protection
+        ws_origin_check_middleware(),
         # viewer/admin must be logged-in to access /viewer
         require_login_middleware(protected_prefixes=("/viewer",)),
         # admin-only routes
