@@ -51,6 +51,13 @@ function formatDate(s){
 
 let lastImageCount = 0;
 
+// Function to escape HTML to prevent XSS
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
 function render(images){
   countChip.textContent = `${images.length}`;
   if(!images.length){
@@ -60,19 +67,20 @@ function render(images){
   }
   empty.style.display = "none";
   grid.innerHTML = images.map(img => {
-    const tags = (img.tags||[]).slice(0,6).map(t => `<span class="badge">${t}</span>`).join("");
+    // Escape all user-provided data to prevent XSS
+    const escapedTags = (img.tags||[]).slice(0,6).map(t => `<span class="badge">${escapeHtml(t)}</span>`).join("");
     const link = img.source || img.url;
     // Add cache-busting timestamp to image URLs for automatic refresh
     const imgUrl = img.url + (img.url.includes('?') ? '&' : '?') + 't=' + Date.now();
     return `
       <article class="item">
-        <a href="${link}" target="_blank" rel="noopener">
-          <img src="${imgUrl}" loading="lazy"/>
+        <a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">
+          <img src="${escapeHtml(imgUrl)}" loading="lazy" alt="Posted image"/>
         </a>
         <div class="meta">
           <div class="muted">${formatDate(img.posted_at)}</div>
-          <div class="muted">${img.author ? "Автор: "+img.author : ""}</div>
-          <div class="tags">${tags}</div>
+          <div class="muted">${img.author ? "Автор: "+escapeHtml(img.author) : ""}</div>
+          <div class="tags">${escapedTags}</div>
         </div>
       </article>
     `;

@@ -1,8 +1,10 @@
 from __future__ import annotations
 import json
+import hmac
 from contextlib import suppress
 from aiohttp import web
 from app.storage.settings_store import parse_tag_lines
+from app.web.auth import check_rate_limit, record_failed_login, generate_csrf_token, validate_csrf_token
 
 MAX_IMAGES_EXPOSE = 200
 
@@ -43,31 +45,65 @@ async def settings_page(request: web.Request) -> web.Response:
 
 
 async def login_page(request: web.Request) -> web.Response:
-    return web.FileResponse(request.app["tpl_dir"] / "login.html")
+    cfg = request.app["config"]
+    # Generate CSRF token for the login form
+    csrf_token = generate_csrf_token(cfg.session_secret)
+    response = web.FileResponse(request.app["tpl_dir"] / "login.html")
+    # Store CSRF token in a cookie (httponly=False so JS can access it if needed, but we'll use hidden field)
+    response.set_cookie("csrf_token", csrf_token, httponly=False, samesite="Strict", max_age=3600)
+    return response
 
 
 async def do_login(request: web.Request) -> web.Response:
     cfg = request.app["config"]
+    
+    # Rate limiting: use IP address as identifier
+    ip_address = request.remote or "unknown"
+    identifier = f"login:{ip_address}"
+    
+    # Check rate limit before processing
+    if not await check_rate_limit(identifier, max_attempts=5, window_seconds=300):
+        return web.HTTPFound("/login?error=ratelimit")
+    
     data = await request.post()
     user = (data.get("user") or "").strip()
     password = (data.get("password") or "").strip()
+    
+    # Validate CSRF token
+    csrf_token = data.get("csrf_token", "")
+    stored_csrf = request.cookies.get("csrf_token", "")
+    if not validate_csrf_token(cfg.session_secret, csrf_token) or not validate_csrf_token(cfg.session_secret, stored_csrf):
+        await record_failed_login(identifier)
+        return web.HTTPFound("/login?error=csrf")
 
     role = None
     redirect_to = "/viewer"
 
-    if user == cfg.admin_user and password == cfg.admin_password:
+    # Use constant-time comparison for passwords to prevent timing attacks
+    admin_user_match = hmac.compare_digest(user.encode(), cfg.admin_user.encode())
+    admin_pass_match = hmac.compare_digest(password.encode(), cfg.admin_password.encode())
+    
+    if admin_user_match and admin_pass_match:
         role = "admin"
         redirect_to = "/settings"
-    elif cfg.viewer_password and user == cfg.viewer_user and password == cfg.viewer_password:
-        role = "viewer"
-        redirect_to = "/viewer"
+    elif cfg.viewer_password:
+        viewer_user_match = hmac.compare_digest(user.encode(), cfg.viewer_user.encode())
+        viewer_pass_match = hmac.compare_digest(password.encode(), cfg.viewer_password.encode())
+        if viewer_user_match and viewer_pass_match:
+            role = "viewer"
+            redirect_to = "/viewer"
 
     if role:
         cookie = request.app["make_session"](user, role)
         resp = web.HTTPFound(redirect_to)
-        resp.set_cookie("session", cookie, httponly=True, samesite="Lax")
+        # Set Secure flag when using HTTPS, Strict SameSite for critical operations
+        resp.set_cookie("session", cookie, httponly=True, samesite="Strict", secure=True)
+        # Clear CSRF token cookie after successful login
+        resp.del_cookie("csrf_token")
         return resp
 
+    # Record failed login attempt
+    await record_failed_login(identifier)
     return web.HTTPFound("/login?error=1")
 
 
